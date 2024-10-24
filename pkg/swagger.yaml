@@ -535,6 +535,8 @@ components:
         types.Settings:
             type: object
             properties:
+                connectionPort:
+                    type: string
                 maxConnections:
                     type: number
                     format: int
@@ -546,8 +548,6 @@ components:
                 serverPort:
                     type: string
                 serverType:
-                    type: string
-                tcpPort:
                     type: string
         types.SortingConfig:
             type: object
