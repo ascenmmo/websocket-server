@@ -70,7 +70,7 @@ func TestConnection(t *testing.T) {
 		env.TokenKey,
 		clients*msgs,
 		1,
-		3,
+		10,
 		logger,
 	)
 	time.Sleep(time.Second * 5)
@@ -81,7 +81,11 @@ func TestConnection(t *testing.T) {
 		go Publisher(t, i)
 		time.Sleep(time.Millisecond * 1)
 	}
+
+	time.Sleep(time.Second * 5)
 	<-ctx.Done()
+
+	getDeleteRooms(t)
 
 	fmt.Println(max, min, maxMsgs)
 }
@@ -143,9 +147,36 @@ func createToken(t *testing.T, i int) string {
 	return token
 }
 
-func createRoom(t *testing.T, token string) {
+func createRoom(t *testing.T, userToken string) {
 	cli := wsGameServer.New(restAddr)
-	err := cli.ServerSettings().CreateRoom(context.Background(), token, types.CreateRoomRequest{})
+
+	tokenGen, err := tokengenerator.NewTokenGenerator(token)
+	info, err := tokenGen.ParseToken(userToken)
+	if err != nil {
+		panic(err)
+	}
+
+	err = cli.ServerSettings().CreateRoom(context.Background(), userToken, types.CreateRoomRequest{
+		"",
+		types.GameConfigs{
+			GameID:   info.GameID,
+			IsExists: true,
+			SortingConfig: []types.SortingConfig{
+				{
+					Name:            "IncrementResult",
+					UseOnServerType: "udp",
+					ResultName:      "TestData",
+					ResultType:      "int",
+					Params: []types.ParamMetadata{
+						{
+							ColumnName: "text",
+							ValueType:  "string",
+						},
+					},
+				},
+			},
+		},
+	})
 	assert.Nil(t, err, "client.do expected nil")
 }
 
@@ -223,5 +254,18 @@ func listen(t *testing.T, conn *websocket.Conn) int {
 			max = sub
 		}
 
+	}
+}
+
+func getDeleteRooms(t *testing.T) {
+	cli := wsGameServer.New(restAddr)
+	time.Sleep(time.Second * 5)
+	results, err := cli.ServerSettings().GetGameResults(context.Background(), createToken(t, 0))
+	if err != nil {
+		fmt.Println("getDeleteRooms err", err)
+		return
+	}
+	for _, result := range results {
+		fmt.Println(result.RoomID, result.Result)
 	}
 }
