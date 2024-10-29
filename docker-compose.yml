@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  connection:
+    restart: always
+    container_name: websocket
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4240:4240"
+      - "8082:8082"
