@@ -2,7 +2,7 @@ package entities
 
 import (
 	"github.com/ascenmmo/websocket-server/internal/connection"
-	"github.com/ascenmmo/websocket-server/pkg/restconnection/types"
+	"github.com/ascenmmo/websocket-server/pkg/api/types"
 	"github.com/google/uuid"
 	"sync"
 	"time"

@@ -2,8 +2,8 @@ package configsService
 
 import (
 	tokentype "github.com/ascenmmo/token-generator/token_type"
+	"github.com/ascenmmo/websocket-server/pkg/api/types"
 	"github.com/ascenmmo/websocket-server/pkg/errors"
-	"github.com/ascenmmo/websocket-server/pkg/restconnection/types"
 )
 
 func GetCountingFunctions() (functions []types.GameConfigExecutor) {

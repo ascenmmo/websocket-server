@@ -2,7 +2,7 @@ package connection
 
 import (
 	"encoding/json"
-	"github.com/ascenmmo/websocket-server/pkg/restconnection/types"
+	"github.com/ascenmmo/websocket-server/pkg/api/types"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"net/http"

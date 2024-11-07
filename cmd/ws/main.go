@@ -22,6 +22,7 @@ func main() {
 		10,
 		60,
 		logger,
+		true,
 	)
 
 	if err != nil {

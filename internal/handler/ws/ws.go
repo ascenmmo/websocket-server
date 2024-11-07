@@ -8,7 +8,7 @@ import (
 	"github.com/ascenmmo/websocket-server/internal/connection"
 	"github.com/ascenmmo/websocket-server/internal/service"
 	"github.com/ascenmmo/websocket-server/internal/utils"
-	"github.com/ascenmmo/websocket-server/pkg/restconnection/types"
+	"github.com/ascenmmo/websocket-server/pkg/api/types"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"

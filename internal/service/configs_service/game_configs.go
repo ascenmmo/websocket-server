@@ -5,7 +5,7 @@ import (
 	tokentype "github.com/ascenmmo/token-generator/token_type"
 	memoryDB "github.com/ascenmmo/websocket-server/internal/storage"
 	"github.com/ascenmmo/websocket-server/internal/utils"
-	"github.com/ascenmmo/websocket-server/pkg/restconnection/types"
+	"github.com/ascenmmo/websocket-server/pkg/api/types"
 	"github.com/google/uuid"
 )
 

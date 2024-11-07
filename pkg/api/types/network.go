@@ -14,6 +14,4 @@ type Response struct {
 }
 
 type CreateRoomRequest struct {
-	TTL         string      `json:"time_to_live"`
-	GameConfigs GameConfigs `json:"gameConfigs"`
 }

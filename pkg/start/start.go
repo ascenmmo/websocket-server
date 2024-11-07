@@ -12,10 +12,11 @@ import (
 	"github.com/ascenmmo/websocket-server/internal/utils"
 	"github.com/ascenmmo/websocket-server/pkg/transport"
 	"github.com/rs/zerolog"
+	"runtime"
 	"time"
 )
 
-func StartWebSocket(ctx context.Context, address, tcpPort, wsPort string, token string, ratelimit int, dataTTL, gameConfigResultsTTl time.Duration, logger zerolog.Logger) (err error) {
+func StartWebSocket(ctx context.Context, address, tcpPort, wsPort string, token string, ratelimit int, dataTTL, gameConfigResultsTTl time.Duration, logger zerolog.Logger, logWithMemoryUsage bool) (err error) {
 	ramDB := memoryDB.NewMemoryDb(ctx, dataTTL)
 	gameConfigResultsDB := memoryDB.NewMemoryDb(ctx, gameConfigResultsTTl)
 	rateLimitDB := memoryDB.NewMemoryDb(ctx, 1)
@@ -30,6 +31,10 @@ func StartWebSocket(ctx context.Context, address, tcpPort, wsPort string, token 
 	newService := service.NewService(tokenGenerator, ramDB, gameConfigService, logger)
 
 	errors := make(chan error)
+
+	if logWithMemoryUsage {
+		logMemoryUsage(logger)
+	}
 
 	go func() {
 		logger.Info().Msg(fmt.Sprintf("ws server listening on %s:%s ", address, wsPort))
@@ -58,4 +63,20 @@ func StartWebSocket(ctx context.Context, address, tcpPort, wsPort string, token 
 	err = <-errors
 
 	return err
+}
+
+func logMemoryUsage(logger zerolog.Logger) {
+	ticker := time.NewTicker(time.Second * 10)
+	go func() {
+		for range ticker.C {
+			var stats runtime.MemStats
+			runtime.ReadMemStats(&stats)
+			logger.Info().
+				Interface("num cpu", runtime.NumCPU()).
+				Interface("Memory Usage", stats.Alloc/1024/1024).
+				Interface("TotalAlloc", stats.TotalAlloc/1024/1024).
+				Interface("Sys", stats.Sys/1024/1024).
+				Interface("NumGC", stats.NumGC)
+		}
+	}()
 }
