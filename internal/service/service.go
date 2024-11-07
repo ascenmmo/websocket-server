@@ -19,7 +19,7 @@ type Service interface {
 	GetConnectionsNum() (countConn int, exists bool)
 	CreateRoom(token string) error
 	GetUsersAndMessage(ds connection.DataSender, clientInfo tokentype.Info, req []byte) (users []types.User, msg []byte, err error)
-	RemoveUser(token string, userID uuid.UUID) (err error)
+	RemoveUser(clientInfo tokentype.Info, userID uuid.UUID) (err error)
 	ParseToken(token string) (info tokentype.Info, err error)
 	SetNewConnection(clientInfo tokentype.Info, ds connection.DataSender) (err error)
 }
@@ -93,12 +93,7 @@ func (s *service) GetUsersAndMessage(ds connection.DataSender, clientInfo tokent
 	return users, req, err
 }
 
-func (s *service) RemoveUser(token string, userID uuid.UUID) (err error) {
-	clientInfo, err := s.token.ParseToken(token)
-	if err != nil {
-		return err
-	}
-
+func (s *service) RemoveUser(clientInfo tokentype.Info, userID uuid.UUID) (err error) {
 	game, err := s.getRoom(clientInfo)
 	if err != nil {
 		return err

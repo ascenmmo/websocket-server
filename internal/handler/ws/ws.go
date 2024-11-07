@@ -62,7 +62,7 @@ func (ws *WebSocket) connect(w http.ResponseWriter, req *http.Request) {
 func (ws *WebSocket) handleConnection(ctx context.Context, token string, clientInfo tokentype.Info, conn *websocket.Conn) {
 	defer func() {
 		conn.Close()
-		err := ws.service.RemoveUser(token, clientInfo.UserID)
+		err := ws.service.RemoveUser(clientInfo, clientInfo.UserID)
 		if err != nil {
 			ws.logger.Error().Err(err).Msg("failed to remove user")
 		}
@@ -130,7 +130,7 @@ func (ws *WebSocket) handleConnection(ctx context.Context, token string, clientI
 			for _, user := range users {
 				if err := user.Connection.Write(newMessage); err != nil {
 					ws.logger.Error().Err(err).Msg("failed to send message to user")
-					if err := ws.service.RemoveUser(token, user.ID); err != nil {
+					if err := ws.service.RemoveUser(clientInfo, user.ID); err != nil {
 						ws.logger.Error().Err(err).Msg("failed to remove user")
 					}
 				}
