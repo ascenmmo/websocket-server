@@ -18,7 +18,6 @@ import (
 const (
 	bufferSize   = 32 * 1024
 	readTimeout  = 60 * time.Second
-	writeTimeout = 10 * time.Second
 	pingInterval = 10 * time.Second
 )
 
@@ -99,10 +98,10 @@ func (ws *WebSocket) handleConnection(ctx context.Context, token string, clientI
 			messageType, message, err := conn.ReadMessage()
 			if err != nil {
 				if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-					ws.logger.Info().Msg("client disconnected normally")
-				} else {
-					ws.logger.Error().Err(err).Msg("ReadMessage failed")
+					ws.logger.Error().Msg("client disconnected normally")
+					return
 				}
+				ws.logger.Error().Err(err).Msg("readMessage failed")
 				return
 			}
 

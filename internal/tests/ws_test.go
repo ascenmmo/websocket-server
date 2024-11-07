@@ -105,18 +105,6 @@ func Publisher(t *testing.T, i int) {
 func Listener(t *testing.T, i int) {
 	defer cancel()
 	connection := newConnection(t, i)
-	//for j := 0; j < msgs; j++ {
-	//	if ctx.Err() != nil {
-	//		return
-	//	}
-	//	msg := buildMessage(t, i, j)
-	//	err := connection.WriteMessage(websocket.BinaryMessage, msg)
-	//	if err != nil {
-	//		countErr++
-	//		fmt.Println(countErr)
-	//	}
-	//	assert.NoError(t, err)
-	//}
 	response := listen(t, connection)
 	fmt.Println("done pubSub", i, "with msgs", response)
 
