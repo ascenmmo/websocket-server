@@ -20,7 +20,6 @@ func main() {
 		env.TokenKey,
 		env.MaxRequestPerSecond,
 		10,
-		60,
 		logger,
 		true,
 	)

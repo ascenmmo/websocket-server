@@ -1,16 +1,13 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	tokengenerator "github.com/ascenmmo/token-generator/token_generator"
 	tokentype "github.com/ascenmmo/token-generator/token_type"
 	"github.com/ascenmmo/websocket-server/internal/connection"
-	configsService "github.com/ascenmmo/websocket-server/internal/service/configs_service"
 	"github.com/ascenmmo/websocket-server/internal/storage"
 	"github.com/ascenmmo/websocket-server/internal/utils"
 	"github.com/ascenmmo/websocket-server/pkg/api/types"
-	"github.com/ascenmmo/websocket-server/pkg/entities"
 	"github.com/ascenmmo/websocket-server/pkg/errors"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -21,17 +18,16 @@ import (
 type Service interface {
 	GetConnectionsNum() (countConn int, exists bool)
 	CreateRoom(token string) error
-	GetUsersAndMessage(ds connection.DataSender, clientInfo tokentype.Info, req types.Request) (users []entities.User, msg []byte, err error)
+	GetUsersAndMessage(ds connection.DataSender, clientInfo tokentype.Info, req []byte) (users []types.User, msg []byte, err error)
 	RemoveUser(token string, userID uuid.UUID) (err error)
 	ParseToken(token string) (info tokentype.Info, err error)
 	SetNewConnection(clientInfo tokentype.Info, ds connection.DataSender) (err error)
 }
 
 type service struct {
-	maxConnections    uint64
-	gameConfigService configsService.GameConfigsService
-	storage           memoryDB.IMemoryDB
-	token             tokengenerator.TokenGenerator
+	maxConnections uint64
+	storage        memoryDB.IMemoryDB
+	token          tokengenerator.TokenGenerator
 
 	logger zerolog.Logger
 }
@@ -59,7 +55,7 @@ func (s *service) CreateRoom(token string) error {
 		return errors.ErrRoomIsExists
 	}
 
-	s.setRoom(clientInfo, &entities.Room{
+	s.setRoom(clientInfo, &types.Room{
 		GameID: clientInfo.GameID,
 		RoomID: clientInfo.RoomID,
 	})
@@ -67,7 +63,7 @@ func (s *service) CreateRoom(token string) error {
 	return nil
 }
 
-func (s *service) GetUsersAndMessage(ds connection.DataSender, clientInfo tokentype.Info, req types.Request) (users []entities.User, msg []byte, err error) {
+func (s *service) GetUsersAndMessage(ds connection.DataSender, clientInfo tokentype.Info, req []byte) (users []types.User, msg []byte, err error) {
 	room, err := s.getRoom(clientInfo)
 	if err != nil {
 		return nil, nil, err
@@ -86,7 +82,7 @@ func (s *service) GetUsersAndMessage(ds connection.DataSender, clientInfo tokent
 	}
 
 	if isNew {
-		room.SetUser(&entities.User{
+		room.SetUser(&types.User{
 			ID:         clientInfo.UserID,
 			Connection: ds,
 		})
@@ -94,16 +90,7 @@ func (s *service) GetUsersAndMessage(ds connection.DataSender, clientInfo tokent
 		s.storage.AddConnection(clientInfo.UserID.String())
 	}
 
-	response := types.Response{
-		Data: req.Data,
-	}
-
-	marshal, err := json.Marshal(response)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return users, marshal, err
+	return users, req, err
 }
 
 func (s *service) RemoveUser(token string, userID uuid.UUID) (err error) {
@@ -115,6 +102,14 @@ func (s *service) RemoveUser(token string, userID uuid.UUID) (err error) {
 	game, err := s.getRoom(clientInfo)
 	if err != nil {
 		return err
+	}
+
+	for _, user := range game.GetUser() {
+		if user.ID == userID {
+			if user.Connection != nil {
+				user.Connection.Close()
+			}
+		}
 	}
 
 	game.RemoveUser(userID)
@@ -136,7 +131,7 @@ func (s *service) SetNewConnection(clientInfo tokentype.Info, ds connection.Data
 	if err != nil {
 		return err
 	}
-	room.SetUser(&entities.User{
+	room.SetUser(&types.User{
 		ID:         clientInfo.UserID,
 		Connection: ds,
 	})
@@ -146,7 +141,7 @@ func (s *service) SetNewConnection(clientInfo tokentype.Info, ds connection.Data
 	return nil
 }
 
-func (s *service) getRoom(clientInfo tokentype.Info) (room *entities.Room, err error) {
+func (s *service) getRoom(clientInfo tokentype.Info) (room *types.Room, err error) {
 	roomKey := utils.GenerateRoomKey(clientInfo)
 
 	roomData, ok := s.storage.GetData(roomKey)
@@ -154,7 +149,7 @@ func (s *service) getRoom(clientInfo tokentype.Info) (room *entities.Room, err e
 		return room, errors.ErrRoomNotFound
 	}
 
-	room, ok = roomData.(*entities.Room)
+	room, ok = roomData.(*types.Room)
 	if !ok {
 		return room, errors.ErrRoomBadValue
 	}
@@ -162,18 +157,17 @@ func (s *service) getRoom(clientInfo tokentype.Info) (room *entities.Room, err e
 	return room, nil
 }
 
-func (s *service) setRoom(clientInfo tokentype.Info, room *entities.Room) {
+func (s *service) setRoom(clientInfo tokentype.Info, room *types.Room) {
 	roomKey := utils.GenerateRoomKey(clientInfo)
 	s.storage.SetData(roomKey, room)
 }
 
-func NewService(token tokengenerator.TokenGenerator, storage memoryDB.IMemoryDB, gameConfigService configsService.GameConfigsService, logger zerolog.Logger) Service {
+func NewService(token tokengenerator.TokenGenerator, storage memoryDB.IMemoryDB, logger zerolog.Logger) Service {
 	srv := &service{
-		maxConnections:    uint64(types.CountConnectionsMAX()),
-		storage:           storage,
-		token:             token,
-		gameConfigService: gameConfigService,
-		logger:            logger,
+		maxConnections: uint64(types.CountConnectionsMAX()),
+		storage:        storage,
+		token:          token,
+		logger:         logger,
 	}
 	go func() {
 		ticker := time.NewTicker(time.Second * 3)

@@ -70,7 +70,6 @@ func TestConnection(t *testing.T) {
 		env.TokenKey,
 		clients*msgs,
 		1,
-		10,
 		logger,
 		false,
 	)

@@ -7,7 +7,6 @@ import (
 	"github.com/ascenmmo/websocket-server/internal/handler/tcp"
 	"github.com/ascenmmo/websocket-server/internal/handler/ws"
 	"github.com/ascenmmo/websocket-server/internal/service"
-	configsService "github.com/ascenmmo/websocket-server/internal/service/configs_service"
 	"github.com/ascenmmo/websocket-server/internal/storage"
 	"github.com/ascenmmo/websocket-server/internal/utils"
 	"github.com/ascenmmo/websocket-server/pkg/transport"
@@ -16,19 +15,16 @@ import (
 	"time"
 )
 
-func StartWebSocket(ctx context.Context, address, tcpPort, wsPort string, token string, ratelimit int, dataTTL, gameConfigResultsTTl time.Duration, logger zerolog.Logger, logWithMemoryUsage bool) (err error) {
+func StartWebSocket(ctx context.Context, address, tcpPort, wsPort string, token string, ratelimit int, dataTTL time.Duration, logger zerolog.Logger, logWithMemoryUsage bool) (err error) {
 	ramDB := memoryDB.NewMemoryDb(ctx, dataTTL)
-	gameConfigResultsDB := memoryDB.NewMemoryDb(ctx, gameConfigResultsTTl)
 	rateLimitDB := memoryDB.NewMemoryDb(ctx, 1)
-	rateLimitBadMessageDB := memoryDB.NewMemoryDb(ctx, 1)
 
 	tokenGenerator, err := tokengenerator.NewTokenGenerator(token)
 	if err != nil {
 		return err
 	}
 
-	gameConfigService := configsService.NewGameConfigsService(gameConfigResultsDB, tokenGenerator)
-	newService := service.NewService(tokenGenerator, ramDB, gameConfigService, logger)
+	newService := service.NewService(tokenGenerator, ramDB, logger)
 
 	errors := make(chan error)
 
@@ -38,7 +34,7 @@ func StartWebSocket(ctx context.Context, address, tcpPort, wsPort string, token 
 
 	go func() {
 		logger.Info().Msg(fmt.Sprintf("ws server listening on %s:%s ", address, wsPort))
-		newWS := wsconnection.NewWebSocket(newService, utils.NewRateLimit(ratelimit, rateLimitDB), utils.NewRateLimit(ratelimit, rateLimitBadMessageDB), logger)
+		newWS := wsconnection.NewWebSocket(newService, utils.NewRateLimit(ratelimit, rateLimitDB), logger)
 		err = newWS.Run(":" + wsPort)
 		if err != nil {
 			errors <- err
