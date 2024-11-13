@@ -76,7 +76,7 @@ func TestConnection(t *testing.T) {
 	time.Sleep(time.Second * 5)
 
 	for i := 0; i < clients; i++ {
-		createRoom(t, createToken(t, i))
+		//createRoom(t, createToken(t, i))
 		go Listener(t, i)
 		go Publisher(t, i)
 		time.Sleep(time.Millisecond * 1)

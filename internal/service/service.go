@@ -138,7 +138,12 @@ func (s *service) getRoom(clientInfo tokentype.Info) (room *types.Room, err erro
 
 	roomData, ok := s.storage.GetData(roomKey)
 	if !ok {
-		return room, errors.ErrRoomNotFound
+		newRoom := &types.Room{
+			GameID: clientInfo.GameID,
+			RoomID: clientInfo.RoomID,
+		}
+		s.setRoom(clientInfo, newRoom)
+		roomData = newRoom
 	}
 
 	room, ok = roomData.(*types.Room)
