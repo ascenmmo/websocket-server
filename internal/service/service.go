@@ -128,8 +128,6 @@ func (s *service) SetNewConnection(clientInfo tokentype.Info, ds connection.Data
 		Connection: ds,
 	})
 
-	s.setRoom(clientInfo, room)
-
 	return nil
 }
 
