@@ -30,6 +30,6 @@ type ServerSettings interface {
 	// @tg summary=`CreateRoom`
 	CreateRoom(ctx context.Context, token string, createRoom types.CreateRoomRequest) (err error)
 	// @tg http-headers=token|Token
-	// @tg summary=`CreateRoom`
+	// @tg summary=`GetDeletedRooms`
 	GetDeletedRooms(ctx context.Context, token string, ids []types.GetDeletedRooms) (deletedIds []types.GetDeletedRooms, err error)
 }

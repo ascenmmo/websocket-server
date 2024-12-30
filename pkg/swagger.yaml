@@ -152,7 +152,7 @@ paths:
         post:
             tags:
                 - ServerSettings
-            summary: CreateRoom
+            summary: GetDeletedRooms
             parameters:
                 - in: header
                   name: Token
